@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YT7 Multi-Uploader v12</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+.header{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:20px 24px;border-bottom:1px solid #1e293b}
+.header h1{font-size:1.3rem;color:#38bdf8}
+.header p{color:#64748b;font-size:.85rem;margin-top:2px}
+.tabs{display:flex;gap:4px;padding:14px 16px 0;border-bottom:1px solid #1e293b;overflow-x:auto;white-space:nowrap}
+.tab{padding:10px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:.85rem;color:#94a3b8;background:none;border:none;flex-shrink:0}
+.tab.active{background:#1e293b;color:#38bdf8;border-bottom:2px solid #38bdf8}
+.tab .badge-num{background:#334155;color:#7dd3fc;padding:1px 7px;border-radius:10px;font-size:.7rem;margin-left:6px}
+.content{padding:18px;display:none}
+.content.active{display:block}
+.card{background:#1e293b;border-radius:12px;padding:18px;margin-bottom:14px;border:1px solid #334155}
+.card h2{color:#38bdf8;margin-bottom:12px;font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:.78rem;color:#94a3b8}
+input,select,textarea{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:9px 11px;color:#e2e8f0;font-size:.88rem;width:100%;font-family:inherit}
+textarea{resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#38bdf8}
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600;font-family:inherit}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-success{background:#16a34a;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-outline{background:transparent;border:1px solid #334155;color:#94a3b8}
+.btn-outline:hover{border-color:#38bdf8;color:#38bdf8}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-xs{padding:4px 9px;font-size:.72rem}
+.ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.ch-card{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px}
+.ch-card.active{border-color:#22c55e}
+.ch-card.inactive{border-color:#475569}
+.ch-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ch-name{font-weight:700;font-size:.95rem}
+.badge{padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge-on{background:#166534;color:#86efac}
+.badge-off{background:#7f1d1d;color:#fca5a5}
+.ch-stat{font-size:.78rem;color:#64748b;margin-top:3px}
+.ch-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.log-line{padding:7px 10px;border-radius:6px;font-size:.78rem;font-family:monospace;margin-bottom:4px;background:#0f172a;word-break:break-all}
+.log-ok{color:#86efac}.log-err{color:#fca5a5}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat-box{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px;text-align:center}
+.stat-num{font-size:1.7rem;font-weight:700;color:#38bdf8}
+.stat-label{font-size:.72rem;color:#64748b;margin-top:3px}
+.schedule-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.schedule-tag{background:#1e3a5f;color:#7dd3fc;padding:3px 9px;border-radius:18px;font-size:.78rem;display:flex;align-items:center;gap:5px}
+.schedule-tag button{background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;line-height:1}
+.time-input{display:flex;gap:6px;margin-top:6px}
+.toast{position:fixed;bottom:20px;right:20px;padding:11px 18px;border-radius:9px;font-size:.85rem;font-weight:600;z-index:9999}
+.toast-ok{background:#166534;color:#86efac}
+.toast-err{background:#7f1d1d;color:#fca5a5}
+.job-box{background:#0f172a;border-radius:8px;padding:11px;font-size:.78rem;font-family:monospace;max-height:220px;overflow-y:auto;color:#86efac;margin-top:10px;border:1px solid #334155}
+.toggle{position:relative;display:inline-block;width:42px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#334155;border-radius:22px;transition:.2s}
+.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked + .toggle-slider{background:#16a34a}
+.toggle input:checked + .toggle-slider:before{transform:translateX(20px)}
+/* OAuth helper box */
+.oauth-box{margin-top:12px;background:#0f172a;border-radius:10px;padding:14px;border:1px solid #334155}
+.oauth-box p{color:#94a3b8;font-size:.8rem;margin-bottom:8px}
+.oauth-steps{background:#1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px}
+.oauth-steps p{color:#7dd3fc;font-size:.82rem;margin-bottom:6px}
+.oauth-code{background:#0f172a;border-radius:6px;padding:8px;text-align:center;font-size:1.4rem;font-weight:700;letter-spacing:5px;color:#fbbf24;font-family:monospace;margin-top:5px}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}.ch-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎬 YT7 Multi-Uploader <span style="font-size:.7rem;background:#1e3a5f;color:#7dd3fc;padding:2px 9px;border-radius:18px;vertical-align:middle">v12</span></h1>
+  <p id="bdTime">BD time লোড হচ্ছে...</p>
+  <p id="nextUpload" style="color:#22c55e;font-size:.8rem;margin-top:3px"></p>
+</div>
+
+<div class="tabs" id="tabsBar">
+  <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+  <button class="tab" data-tab="youtube">📺 YouTube <span class="badge-num" id="cnt-youtube">0</span></button>
+  <button class="tab" data-tab="tiktok">🎵 TikTok <span class="badge-num" id="cnt-tiktok">0</span></button>
+  <button class="tab" data-tab="instagram">📷 Instagram <span class="badge-num" id="cnt-instagram">0</span></button>
+  <button class="tab" data-tab="facebook">📘 Facebook <span class="badge-num" id="cnt-facebook">0</span></button>
+  <button class="tab" data-tab="settings">⚙️ Settings</button>
+  <button class="tab" data-tab="logs">📋 Logs</button>
+</div>
+
+<div id="tab-dashboard" class="content active">
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-num" id="st-today">-</div><div class="stat-label">আজকের Upload</div></div>
+    <div class="stat-box"><div class="stat-num" id="st-total">-</div><div class="stat-label">মোট Upload</div></div>
+    <div class="stat-box"><div class="stat-num" id="st-active">-</div><div class="stat-label">Active Channel</div></div>
+  </div>
+  <div class="card">
+    <h2>🚀 Manual Trigger</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="manualBtns"></div>
+    <div id="jobStatus" class="job-box" style="display:none"></div>
+  </div>
+  <div class="card">
+    <h2>📡 Channel Overview</h2>
+    <div id="overviewWrap"></div>
+  </div>
+</div>
+
+<div id="tab-youtube"   class="content"><div id="ch-list-youtube"></div></div>
+<div id="tab-tiktok"    class="content"><div id="ch-list-tiktok"></div></div>
+<div id="tab-instagram" class="content"><div id="ch-list-instagram"></div></div>
+<div id="tab-facebook"  class="content"><div id="ch-list-facebook"></div></div>
+
+<div id="tab-settings" class="content">
+  <div class="card">
+    <h2>🔑 Google Drive</h2>
+    <p style="color:#64748b;font-size:.78rem;margin-bottom:10px">Drive folder যদি "Anyone with the link" public থাকে, তাহলে শুধু API Key দিলেই হবে।</p>
+    <div class="form-group" style="margin-bottom:10px"><label>Drive API Key</label><input id="s-drive-apikey" placeholder="AIzaSy..."></div>
+    <div class="form-row">
+      <div class="form-group"><label>Drive Client ID</label><input id="s-d-cid"></div>
+      <div class="form-group"><label>Drive Client Secret</label><input id="s-d-cs" type="password"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Drive Refresh Token</label><input id="s-d-rt" type="password"></div>
+  </div>
+  <div class="card">
+    <h2>📺 YouTube</h2>
+    <div class="form-row">
+      <div class="form-group"><label>YT Client ID</label><input id="s-yt-cid"></div>
+      <div class="form-group"><label>YT Client Secret</label><input id="s-yt-cs" type="password"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>TV Client ID (Device Code)</label><input id="s-tv-cid"></div>
+      <div class="form-group"><label>TV Client Secret</label><input id="s-tv-cs" type="password"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Video Privacy</label><select id="s-privacy"><option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option></select></div>
+  </div>
+  <div class="card">
+    <h2>🎵 TikTok</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Client Key</label><input id="s-tk-ck"></div>
+      <div class="form-group"><label>Client Secret</label><input id="s-tk-cs" type="password"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Default Privacy</label><select id="s-tk-privacy"><option value="SELF_ONLY">SELF_ONLY (safest)</option><option value="PUBLIC_TO_EVERYONE">PUBLIC_TO_EVERYONE</option><option value="MUTUAL_FOLLOW_FRIENDS">MUTUAL_FOLLOW_FRIENDS</option></select></div>
+  </div>
+  <div class="card">
+    <h2>📷📘 Facebook + Instagram (একই Meta App)</h2>
+    <div class="form-row">
+      <div class="form-group"><label>FB App ID</label><input id="s-fb-appid"></div>
+      <div class="form-group"><label>FB App Secret</label><input id="s-fb-appsecret" type="password"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>🌐 Base URL</h2>
+    <div class="form-group"><label>Railway URL</label><input id="s-base" placeholder="https://your-app.railway.app"></div>
+  </div>
+  <div class="card">
+    <h2>📨 Telegram</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Bot Token</label><input id="s-tg-token" type="password"></div>
+      <div class="form-group"><label>Chat ID</label><input id="s-tg-chat"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="saveShared()">💾 Save Settings</button>
+    <button class="btn btn-outline" onclick="testTG()">🔔 Test Telegram</button>
+  </div>
+</div>
+
+<div id="tab-logs" class="content"><div class="card"><h2>📋 Upload History</h2><div id="logList"></div></div></div>
+
+<script>
+const PLATFORMS = ['youtube','tiktok','instagram','facebook'];
+const PLATFORM_META = {
+  youtube:{icon:'📺',label:'YouTube',color:'#dc2626'},
+  tiktok:{icon:'🎵',label:'TikTok',color:'#ec4899'},
+  instagram:{icon:'📷',label:'Instagram',color:'#a855f7'},
+  facebook:{icon:'📘',label:'Facebook',color:'#2563eb'}
+};
+let CONFIG = {}, STATUS = {};
+
+function toast(msg, ok=true){ const t=document.createElement('div'); t.className='toast '+(ok?'toast-ok':'toast-err'); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 3000); }
+async function api(method, url, body){
+  try {
+    const finalUrl = method==='GET' ? url+(url.includes('?')?'&':'?')+'_='+Date.now() : url;
+    const r = await fetch(finalUrl,{method,cache:'no-store',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    if (!r.ok) { const txt = await r.text().catch(()=>''); return { error: `HTTP ${r.status}: ${txt.slice(0,200)}` }; }
+    return await r.json();
+  } catch(e) { return { error: e.message }; }
+}
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showTab(name, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name==='logs') loadLogs();
+}
+document.getElementById('tabsBar').addEventListener('click', e => { const btn = e.target.closest('[data-tab]'); if (btn) showTab(btn.dataset.tab, btn); });
+
+async function loadAll(){
+  const cfgRes = await api('GET','/api/config');
+  CONFIG = (cfgRes && !cfgRes.error) ? cfgRes : (CONFIG || { shared:{}, channels:{youtube:[],tiktok:[],instagram:[],facebook:[]} });
+  const stRes = await api('GET','/api/status');
+  STATUS = (stRes && !stRes.error) ? stRes : (STATUS || { platforms:{youtube:[],tiktok:[],instagram:[],facebook:[]}, todayUploads:0, totalUploads:0 });
+  renderDashboard();
+  for (const p of PLATFORMS) renderPlatform(p);
+  renderSharedSettings();
+  for (const p of PLATFORMS) document.getElementById('cnt-'+p).textContent = (CONFIG.channels[p]||[]).length;
+  const t = await api('GET','/api/time');
+  document.getElementById('bdTime').textContent = 'BD: ' + t.bd;
+  document.getElementById('nextUpload').textContent = t.next_upload ? '⏰ পরবর্তী: ' + t.next_upload : '';
+}
+
+function renderDashboard(){
+  if (!STATUS?.platforms) return;
+  // Redis error warning
+  const existingWarn = document.getElementById('redis-warn');
+  if (existingWarn) existingWarn.remove();
+  if (STATUS.redisError) {
+    const w = document.createElement('div');
+    w.id = 'redis-warn';
+    w.style.cssText = 'background:#7f1d1d;color:#fca5a5;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:.82rem';
+    w.textContent = '⚠️ ' + STATUS.redisError;
+    document.getElementById('tab-dashboard').prepend(w);
+  }
+  document.getElementById('st-today').textContent  = STATUS.todayUploads ?? '-';
+  document.getElementById('st-total').textContent  = STATUS.totalUploads ?? '-';
+  let active = 0;
+  for (const p of PLATFORMS) active += (STATUS.platforms[p]||[]).filter(c=>c.enabled).length;
+  document.getElementById('st-active').textContent = active;
+  const btns = document.getElementById('manualBtns'); btns.innerHTML = '';
+  for (const p of PLATFORMS){
+    const m = PLATFORM_META[p];
+    const b = document.createElement('button');
+    b.className = 'btn btn-outline btn-sm';
+    b.innerHTML = m.icon + ' ' + m.label + ' সব';
+    b.onclick = () => triggerPlatform(p); btns.appendChild(b);
+  }
+  const all = document.createElement('button'); all.className='btn btn-success btn-sm'; all.innerHTML='▶ ALL'; all.onclick=()=>triggerAll(); btns.appendChild(all);
+  const ow = document.getElementById('overviewWrap'); ow.innerHTML = '';
+  for (const p of PLATFORMS){
+    const m = PLATFORM_META[p]; const list = STATUS.platforms[p] || [];
+    if (!list.length) continue;
+    const section = document.createElement('div');
+    section.style.marginBottom='14px';
+    section.innerHTML = '<h3 style="color:'+m.color+';margin-bottom:8px;font-size:.95rem">'+m.icon+' '+m.label+'</h3><div class="ch-grid" id="ov-'+p+'"></div>';
+    ow.appendChild(section);
+    const grid = section.querySelector('#ov-'+p);
+    list.forEach(ch => {
+      grid.innerHTML += `<div class="ch-card ${ch.enabled?'active':'inactive'}">
+        <div class="ch-header"><span class="ch-name">${escapeHtml(ch.name)}</span><span class="badge ${ch.enabled?'badge-on':'badge-off'}">${ch.enabled?'ON':'OFF'}</span></div>
+        <div class="ch-stat">🔑 ${ch.hasToken?'✅':'❌'} | 📁 ${ch.hasDrive?'✅':'❌'}</div>
+        <div class="ch-stat">⏰ ${ch.schedule?.join(', ')||'নেই'}</div>
+        <div class="ch-stat">📊 Queue: ${ch.queueLeft} | Done: ${ch.totalDone}</div>
+        <div class="ch-actions">
+          <button class="btn btn-primary btn-xs" onclick="triggerChannel('${p}',${ch.id})">▶ Upload</button>
+          <button class="btn btn-outline btn-xs" onclick="resetState('${p}',${ch.id})">🔄 Reset</button>
+        </div>
+      </div>`;
+    });
+  }
+}
+
+function renderPlatform(p){
+  const m = PLATFORM_META[p]; const list = CONFIG.channels[p] || [];
+  const el = document.getElementById('ch-list-'+p);
+  let html = '<div class="card"><h2>'+m.icon+' '+m.label+' Channels <span style="margin-left:auto"><button class="btn btn-success btn-sm" onclick="addChannel(\''+p+'\')">+ Add Channel</button></span></h2>';
+  if (!list.length) html += '<p style="color:#64748b;font-size:.85rem">কোনো '+m.label+' channel add করা হয়নি। উপরের + Add Channel button টিপুন।</p>';
+  html += '</div>';
+  list.forEach(ch => { html += renderChannelCard(p, ch); });
+  el.innerHTML = html;
+}
+
+function renderChannelCard(p, ch){
+  const id = p+'-'+ch.id;
+  const connected = (p==='youtube'&&ch.yt_refresh_token) || (p==='tiktok'&&ch.tk_refresh_token) || (p==='instagram'&&ch.ig_access_token) || (p==='facebook'&&ch.fb_page_access_token);
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0">${PLATFORM_META[p].icon} ${escapeHtml(ch.name)} <span style="font-size:.75rem;color:#64748b">(id: ${ch.id})</span></h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="badge ${connected?'badge-on':'badge-off'}">${connected?'Connected':'Not Connected'}</span>
+        <label class="toggle"><input type="checkbox" id="${id}-enabled" ${ch.enabled?'checked':''} onchange="toggleChannel('${p}',${ch.id}, this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Channel Name</label><input id="${id}-name" value="${escapeHtml(ch.name)}"></div>
+      <div class="form-group"><label>Drive Folder ID</label><input id="${id}-folder" value="${escapeHtml(ch.drive_folder_id||'')}" placeholder="ফোল্ডার URL এর শেষ অংশ"></div>
+    </div>
+    ${renderPlatformFields(p, ch, id)}
+    <div class="form-group" style="margin-bottom:10px"><label>📝 Titles (প্রতি লাইনে ১টা)</label><textarea id="${id}-titles" rows="5" placeholder="খালি রাখলে Drive filename ব্যবহার হবে">${escapeHtml((ch.titles||[]).join('\n'))}</textarea></div>
+    <div class="form-group" style="margin-bottom:10px"><label>📄 Description</label><textarea id="${id}-desc" rows="2">${escapeHtml(ch.description||'')}</textarea></div>
+    <div class="form-group" style="margin-bottom:10px"><label>🏷️ Tags (JSON array অথবা comma-separated)</label><textarea id="${id}-tags" rows="2" style="font-family:monospace;font-size:.8rem">${escapeHtml(typeof ch.tags==='string'?ch.tags:(ch.tags?JSON.stringify(ch.tags):''))}</textarea></div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:.78rem;color:#94a3b8">⏰ Schedule (BD time)</label>
+      <div class="schedule-tags" id="${id}-slots">
+        ${(ch.schedule||[]).map(s => '<div class="schedule-tag" data-time="'+s+'"><span>'+s+'</span><button onclick="this.parentElement.remove()">×</button></div>').join('')}
+      </div>
+      <div class="time-input"><input type="time" id="${id}-newtime" style="width:130px"><button class="btn btn-outline btn-sm" onclick="addSlot('${id}')">+ Add</button></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="saveChannel('${p}',${ch.id})">💾 Save</button>
+      <button class="btn btn-success btn-sm" onclick="triggerChannel('${p}',${ch.id})">▶ Upload Now</button>
+      ${renderConnectBtn(p, ch.id)}
+      <button class="btn btn-outline btn-sm" onclick="resetState('${p}',${ch.id})">🔄 Reset</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteChannel('${p}',${ch.id})">🗑 Delete</button>
+    </div>
+    ${renderOAuthHelperBox(p, ch)}
+  </div>`;
+}
+
+function renderPlatformFields(p, ch, id){
+  if (p==='youtube') return `<div class="form-group" style="margin-bottom:10px"><label>YouTube Refresh Token (Manual)</label><input id="${id}-yt-rt" type="password" placeholder="${ch.yt_refresh_token?'••••connected':'OAuth Connect button ব্যবহার করো'}"></div>`;
+  if (p==='tiktok') return `<div class="form-row">
+    <div class="form-group"><label>Privacy Override</label><select id="${id}-tk-privacy">
+      <option value="">(use default)</option>
+      <option value="SELF_ONLY" ${ch.tk_privacy==='SELF_ONLY'?'selected':''}>SELF_ONLY</option>
+      <option value="PUBLIC_TO_EVERYONE" ${ch.tk_privacy==='PUBLIC_TO_EVERYONE'?'selected':''}>PUBLIC_TO_EVERYONE</option>
+      <option value="MUTUAL_FOLLOW_FRIENDS" ${ch.tk_privacy==='MUTUAL_FOLLOW_FRIENDS'?'selected':''}>MUTUAL_FOLLOW_FRIENDS</option>
+    </select></div>
+    <div class="form-group"><label>Source method</label><select id="${id}-tk-pull">
+      <option value="true"  ${ch.tk_use_pull_from_url!==false?'selected':''}>PULL_FROM_URL (Drive)</option>
+      <option value="false" ${ch.tk_use_pull_from_url===false?'selected':''}>FILE_UPLOAD</option>
+    </select></div>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:.8rem;color:#94a3b8">
+    <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="${id}-tk-noduet" ${ch.tk_disable_duet?'checked':''}> Disable Duet</label>
+    <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="${id}-tk-nostitch" ${ch.tk_disable_stitch?'checked':''}> Disable Stitch</label>
+    <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="${id}-tk-nocomment" ${ch.tk_disable_comment?'checked':''}> Disable Comment</label>
+  </div>`;
+  if (p==='instagram') return `<div class="form-row">
+    <div class="form-group"><label>IG User ID</label><input id="${id}-ig-uid" value="${escapeHtml(ch.ig_user_id||'')}"></div>
+    <div class="form-group"><label>IG Access Token</label><input id="${id}-ig-tok" type="password" placeholder="${ch.ig_access_token?'••••connected':''}"></div>
+  </div>
+  <div style="margin-bottom:10px;font-size:.8rem;color:#94a3b8"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="${id}-ig-feed" ${ch.ig_share_to_feed!==false?'checked':''}> Reel-কে Feed-এও share</label></div>`;
+  if (p==='facebook') return `<div class="form-row">
+    <div class="form-group"><label>FB Page ID</label><input id="${id}-fb-pid" value="${escapeHtml(ch.fb_page_id||'')}"></div>
+    <div class="form-group"><label>Page Access Token</label><input id="${id}-fb-tok" type="password" placeholder="${ch.fb_page_access_token?'••••connected':''}"></div>
+  </div>`;
+  return '';
+}
+
+function renderConnectBtn(p, chId){
+  if (p==='youtube') return `<a href="/auth/youtube/${chId}/start" target="_blank"><button class="btn btn-outline btn-sm">🔑 OAuth Connect</button></a> <button class="btn btn-outline btn-sm" onclick="toggleDeviceBox('${p}',${chId})">📱 Device Code</button>`;
+  if (p==='tiktok')    return `<a href="/auth/tiktok/${chId}/start" target="_blank"><button class="btn btn-outline btn-sm">🔑 Connect TikTok</button></a> <button class="btn btn-outline btn-sm" onclick="toggleDeviceBox('${p}',${chId})">📱 Device Code</button>`;
+  if (p==='instagram') return `<a href="/auth/instagram/${chId}/start" target="_blank"><button class="btn btn-outline btn-sm">🔑 Connect Instagram</button></a>`;
+  if (p==='facebook')  return `<a href="/auth/facebook/${chId}/start" target="_blank"><button class="btn btn-outline btn-sm">🔑 Connect Facebook</button></a>`;
+  return '';
+}
+
+// ===== OAuth Helper Box — সব platform এ =====
+function renderOAuthHelperBox(p, ch){
+  const id = p + '-' + ch.id;
+  const connected = (p==='youtube'&&ch.yt_refresh_token) || (p==='tiktok'&&ch.tk_refresh_token) || (p==='instagram'&&ch.ig_access_token) || (p==='facebook'&&ch.fb_page_access_token);
+
+  // YouTube: Device Code box
+  if (p === 'youtube') {
+    return `<div id="oauthbox-${id}" class="oauth-box" style="display:none">
+      <p>📱 Browser ছাড়া connect (TV/Device Code)</p>
+      <button class="btn btn-primary btn-sm" onclick="startDeviceFlow('youtube',${ch.id})">▶ শুরু কর</button>
+      <div id="oauthinfo-${id}" style="margin-top:10px"></div>
+    </div>`;
+  }
+
+  // TikTok: Device Code box (TikTok OAuth কখনো কখনো browser ছাড়া কাজ করে না, তাই helper দেওয়া হলো)
+  if (p === 'tiktok') {
+    return `<div id="oauthbox-${id}" class="oauth-box" style="display:none">
+      <p>🎵 TikTok Connect Helper</p>
+      <div style="background:#1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+        <p style="color:#7dd3fc;font-size:.82rem">১. উপরের <b>🔑 Connect TikTok</b> বাটন চাপো</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">২. TikTok-এ login করে permission দাও</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">৩. Redirect এর পর এই page refresh হবে</p>
+        <p style="color:#fbbf24;font-size:.78rem;margin-top:8px">⚠️ Base URL Settings-এ সঠিকভাবে set করা থাকতে হবে</p>
+      </div>
+      <div style="font-size:.78rem;color:#94a3b8">
+        <b style="color:#e2e8f0">Token expires at:</b>
+        ${ch.tk_token_expires_at ? new Date(ch.tk_token_expires_at*1000).toLocaleString('bn-BD') : 'N/A'}
+      </div>
+      ${connected ? '<div style="margin-top:8px;color:#86efac;font-size:.8rem">✅ Connected — Token আছে</div>' : '<div style="margin-top:8px;color:#fca5a5;font-size:.8rem">❌ Not connected — Connect করো</div>'}
+    </div>`;
+  }
+
+  // Instagram: helper info box
+  if (p === 'instagram') {
+    return `<div id="oauthbox-${id}" class="oauth-box" style="display:none">
+      <p>📷 Instagram Connect Helper</p>
+      <div style="background:#1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+        <p style="color:#7dd3fc;font-size:.82rem">Instagram connect করতে:</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">১. Facebook Page-এর সাথে IG Business account link থাকতে হবে</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">২. উপরের <b>🔑 Connect Instagram</b> চাপো</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">৩. Facebook দিয়ে login → Permission দাও</p>
+        <p style="color:#fbbf24;font-size:.78rem;margin-top:8px">⚠️ Personal IG account কাজ করবে না — Business/Creator লাগবে</p>
+      </div>
+      ${connected
+        ? `<div style="color:#86efac;font-size:.8rem">✅ Connected — IG User ID: <code style="background:#0f172a;padding:2px 6px;border-radius:4px">${escapeHtml(ch.ig_user_id||'')}</code></div>`
+        : '<div style="color:#fca5a5;font-size:.8rem">❌ Not connected</div>'}
+    </div>`;
+  }
+
+  // Facebook: helper info box
+  if (p === 'facebook') {
+    return `<div id="oauthbox-${id}" class="oauth-box" style="display:none">
+      <p>📘 Facebook Connect Helper</p>
+      <div style="background:#1e3a5f;border-radius:8px;padding:12px;margin-bottom:10px">
+        <p style="color:#7dd3fc;font-size:.82rem">Facebook Page connect করতে:</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">১. উপরের <b>🔑 Connect Facebook</b> চাপো</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">২. Facebook login → Page select করো</p>
+        <p style="color:#7dd3fc;font-size:.82rem;margin-top:6px">৩. Auto-detect করে Page ID + Token save হবে</p>
+        <p style="color:#fbbf24;font-size:.78rem;margin-top:8px">⚠️ Personal profile না — Page access লাগবে</p>
+      </div>
+      ${connected
+        ? `<div style="color:#86efac;font-size:.8rem">✅ Connected — Page ID: <code style="background:#0f172a;padding:2px 6px;border-radius:4px">${escapeHtml(ch.fb_page_id||'')}</code></div>`
+        : '<div style="color:#fca5a5;font-size:.8rem">❌ Not connected</div>'}
+    </div>`;
+  }
+  return '';
+}
+
+function toggleDeviceBox(p, chId){
+  const el = document.getElementById('oauthbox-'+p+'-'+chId);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// YouTube + TikTok Device Code flow
+async function startDeviceFlow(p, chId){
+  const infoEl = document.getElementById('oauthinfo-'+p+'-'+chId);
+  if (!infoEl) return;
+  infoEl.innerHTML = '<p style="color:#94a3b8">⏳ Code নিচ্ছি...</p>';
+  const r = await api('POST', '/api/device/start/'+chId);
+  if (r.error) { infoEl.innerHTML='<p style="color:#ef4444">❌ '+escapeHtml(r.error)+'</p>'; return; }
+  infoEl.innerHTML = `<div class="oauth-steps">
+    <p>১. <a href="${r.verification_url}" target="_blank" style="color:#38bdf8;font-weight:700">${r.verification_url}</a> এ যাও</p>
+    <p style="margin-top:8px">২. এই Code টাইপ করো:</p>
+    <div class="oauth-code">${r.user_code}</div>
+  </div>
+  <button class="btn btn-success btn-sm" onclick="pollDeviceToken('${p}',${chId},'${r.device_code}',${r.interval||5})">✅ Login করেছি — Check করো</button>
+  <div id="poll-status-${p}-${chId}" style="margin-top:8px"></div>`;
+}
+
+async function pollDeviceToken(p, chId, deviceCode, interval){
+  const statusEl = document.getElementById('poll-status-'+p+'-'+chId);
+  if (!statusEl) return;
+  statusEl.innerHTML='<p style="color:#fbbf24">⏳ Checking...</p>';
+  let tries=0;
+  const iv=setInterval(async()=>{
+    tries++;
+    if (tries>30){clearInterval(iv);statusEl.innerHTML='<p style="color:#ef4444">⏰ Timeout — আবার চেষ্টা করো</p>';return;}
+    const r = await api('POST','/api/device/poll/'+chId,{device_code:deviceCode});
+    if (r.status==='pending'||r.status==='slow_down'){statusEl.innerHTML='<p style="color:#94a3b8">⏳ অপেক্ষা করো ('+tries+')</p>';return;}
+    clearInterval(iv);
+    if (r.status==='ok'){toast('✅ '+p+' CH'+chId+' connected!');loadAll();}
+    else statusEl.innerHTML='<p style="color:#ef4444">❌ '+(r.error||'failed')+'</p>';
+  }, (interval||5)*1000);
+}
+
+function renderSharedSettings(){
+  const s = CONFIG.shared || {}; const g = id => document.getElementById(id);
+  g('s-drive-apikey').value = s.drive_api_key || '';
+  g('s-d-cid').value = s.drive_client_id || '';
+  g('s-d-cs').value  = s.drive_client_secret || '';
+  g('s-d-rt').value  = s.drive_refresh_token || '';
+  g('s-yt-cid').value= s.yt_client_id || '';
+  g('s-yt-cs').value = s.yt_client_secret || '';
+  g('s-tv-cid').value= s.tv_client_id || '';
+  g('s-tv-cs').value = s.tv_client_secret || '';
+  g('s-privacy').value = s.yt_privacy || 'public';
+  g('s-tk-ck').value = s.tiktok_client_key || '';
+  g('s-tk-cs').value = s.tiktok_client_secret || '';
+  g('s-tk-privacy').value = s.tiktok_privacy || 'SELF_ONLY';
+  g('s-fb-appid').value = s.fb_app_id || '';
+  g('s-fb-appsecret').value = s.fb_app_secret || '';
+  g('s-base').value = s.base_url || '';
+  g('s-tg-token').value = s.tg_bot_token || '';
+  g('s-tg-chat').value = s.tg_chat_id || '';
+}
+
+async function saveShared(){
+  const g = id => document.getElementById(id).value;
+  const body = { drive_api_key: g('s-drive-apikey'), drive_client_id: g('s-d-cid'), drive_client_secret: g('s-d-cs'), drive_refresh_token: g('s-d-rt'), yt_client_id: g('s-yt-cid'), yt_client_secret: g('s-yt-cs'), tv_client_id: g('s-tv-cid'), tv_client_secret: g('s-tv-cs'), yt_privacy: g('s-privacy'), tiktok_client_key: g('s-tk-ck'), tiktok_client_secret: g('s-tk-cs'), tiktok_privacy: g('s-tk-privacy'), fb_app_id: g('s-fb-appid'), fb_app_secret: g('s-fb-appsecret'), base_url: g('s-base'), tg_bot_token: g('s-tg-token'), tg_chat_id: g('s-tg-chat') };
+  const r = await api('POST','/api/config/shared', body);
+  r.ok ? toast('✅ Saved') : toast('❌ Error', false);
+}
+async function testTG(){ const r = await api('POST','/api/telegram/test'); r.ok ? toast('✅ Telegram সফল') : toast('❌ '+(r.error||'failed'), false); }
+
+async function addChannel(p){ const r = await api('POST','/api/channel/'+p+'/add'); if (!r.ok) return toast('❌ Failed', false); toast('✅ '+PLATFORM_META[p].label+' added'); loadAll(); }
+async function deleteChannel(p, id){
+  if (!confirm('সত্যি delete করবে '+p+' channel '+id+'?')) return;
+  const r = await fetch('/api/channel/'+p+'/'+id,{method:'DELETE'}).then(r=>r.json());
+  if (!r.ok) return toast('❌ Failed', false);
+  toast('🗑 Deleted'); loadAll();
+}
+async function toggleChannel(p, id, val){ await api('POST','/api/channel/'+p+'/'+id, { enabled: val }); toast(val ? '✅ Enabled' : 'Disabled'); loadAll(); }
+function addSlot(id){
+  const inp = document.getElementById(id+'-newtime'); const t = inp.value;
+  if (!t) return toast('⏰ সময় দাও', false);
+  const existing = [...document.querySelectorAll('#'+id+'-slots .schedule-tag')].map(el=>el.dataset.time);
+  if (existing.includes(t)) return toast('এই সময় আছে', false);
+  const div = document.createElement('div'); div.className='schedule-tag'; div.dataset.time=t;
+  div.innerHTML='<span>'+t+'</span><button onclick="this.parentElement.remove()">×</button>';
+  document.getElementById(id+'-slots').appendChild(div); inp.value='';
+}
+
+async function saveChannel(p, id){
+  const idStr = p+'-'+id;
+  // FIX: সঠিকভাবে element ID build করে value নেওয়া
+  const gv = sel => document.getElementById(idStr+sel)?.value;
+  const gc = sel => document.getElementById(idStr+sel)?.checked;
+  const slots=[];
+  document.querySelectorAll('#'+idStr+'-slots .schedule-tag').forEach(el=>{
+    const t = String(el.dataset.time||'').trim().slice(0,5);
+    if (t && /^\d{2}:\d{2}$/.test(t)) slots.push(t);
+  });
+  let tags = gv('-tags')?.trim() || '';
+  if (tags && !tags.startsWith('[')) tags = JSON.stringify(tags.split(',').map(t=>t.trim()).filter(Boolean));
+  const body = {
+    name: gv('-name'),
+    drive_folder_id: gv('-folder'),
+    schedule: Array.from(new Set(slots)).sort(),
+    titles: (gv('-titles')||'').split(/\r?\n/).map(t=>t.trim()).filter(Boolean),
+    description: gv('-desc'),
+    tags
+  };
+  if (p==='youtube'){
+    const v = gv('-yt-rt'); if (v && !v.includes('••••')) body.yt_refresh_token = v;
+  } else if (p==='tiktok'){
+    body.tk_privacy = gv('-tk-privacy') || '';
+    body.tk_use_pull_from_url = gv('-tk-pull') === 'true';
+    body.tk_disable_duet    = gc('-tk-noduet')    || false;
+    body.tk_disable_stitch  = gc('-tk-nostitch')  || false;
+    body.tk_disable_comment = gc('-tk-nocomment') || false;
+  } else if (p==='instagram'){
+    body.ig_user_id = gv('-ig-uid');
+    const v = gv('-ig-tok'); if (v && !v.includes('••••')) body.ig_access_token = v;
+    const feedEl = document.getElementById(idStr+'-ig-feed');
+    body.ig_share_to_feed = feedEl ? feedEl.checked : true;
+  } else if (p==='facebook'){
+    body.fb_page_id = gv('-fb-pid');
+    const v = gv('-fb-tok'); if (v && !v.includes('••••')) body.fb_page_access_token = v;
+  }
+  const r = await api('POST','/api/channel/'+p+'/'+id, body);
+  if (!r.ok) return toast('❌ Save failed', false);
+  toast('✅ Saved'); loadAll();
+}
+
+async function triggerChannel(p, id){
+  const box=document.getElementById('jobStatus'); box.style.display='block'; box.textContent='⏳ শুরু...';
+  const r = await api('POST','/api/upload/'+p+'/'+id);
+  if (!r.jobId) { box.textContent='❌ Failed'; return; }
+  pollJob(r.jobId);
+}
+async function triggerPlatform(p){
+  const box=document.getElementById('jobStatus'); box.style.display='block'; box.textContent='⏳ '+p+'...';
+  const r = await api('POST','/api/upload/platform/'+p+'/all');
+  if (r.error) { box.textContent='❌ '+r.error; return; }
+  if (!r.jobId) { box.textContent='❌ Failed'; return; }
+  pollJob(r.jobId);
+}
+async function triggerAll(){
+  const box=document.getElementById('jobStatus'); box.style.display='block'; box.textContent='⏳ All...';
+  const r = await api('POST','/api/upload/all');
+  if (r.error) { box.textContent='❌ '+r.error; return; }
+  if (!r.jobId) { box.textContent='❌ Failed'; return; }
+  pollJob(r.jobId);
+}
+function pollJob(jobId){
+  const box=document.getElementById('jobStatus');
+  const iv=setInterval(async()=>{
+    const j = await api('GET','/api/job/'+jobId);
+    if (j.error) { clearInterval(iv); box.innerHTML='<div style="color:#fca5a5">❌ Job not found বা connection error</div>'; return; }
+    box.innerHTML = (j.log||[]).map(l=>'<div>'+escapeHtml(l)+'</div>').join('') || '⏳ চলছে...';
+    box.scrollTop=box.scrollHeight;
+    if (j.status==='done'){clearInterval(iv);loadAll();toast('✅ Upload শেষ');}
+    else if (j.status==='error'){clearInterval(iv);loadAll();toast('❌ Upload failed',false);}
+    else if (j.status==='partial'){clearInterval(iv);loadAll();toast('⚠️ কিছু upload failed',false);}
+  }, 1500);
+}
+async function resetState(p, id){
+  if (!confirm(p+' CH'+id+' rotation reset?')) return;
+  await api('POST','/api/state/reset/'+p+'/'+id);
+  toast('🔄 Reset'); loadAll();
+}
+
+async function loadLogs(){
+  const logs = await api('GET','/api/logs');
+  const el = document.getElementById('logList');
+  if (!logs.length) { el.innerHTML='<p style="color:#64748b">কোনো log নেই</p>'; return; }
+  el.innerHTML = logs.slice(0,50).map(l => {
+    const icon = (PLATFORM_META[l.platform]||{}).icon || '?';
+    return '<div class="log-line '+(l.status==='ok'?'log-ok':'log-err')+'">['+String(l.ts||'').slice(0,19)+'] '+icon+' '+escapeHtml(l.channel||'?')+' '+(l.status==='ok'?'✅':'❌')+' '+escapeHtml(l.title||l.error||'-')+(l.url?' <a href="'+l.url+'" target="_blank" style="color:#7dd3fc;margin-left:8px">▶</a>':'')+'</div>';
+  }).join('');
+}
+
+setInterval(async ()=>{
+  const t = await api('GET','/api/time');
+  document.getElementById('bdTime').textContent = 'BD: ' + t.bd;
+  document.getElementById('nextUpload').textContent = t.next_upload ? '⏰ পরবর্তী: ' + t.next_upload : '';
+}, 30000);
+
+loadAll();
+</script>
+</body>
+</html>
